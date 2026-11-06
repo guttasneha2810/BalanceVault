@@ -26,9 +26,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ---------------------------------------------------------------------
 INSERT INTO users (id, username, email, password_hash, full_name, role, status, created_at, updated_at) VALUES
 (1, 'admin', 'admin@ledgerline.com', '$2a$10$9FBPoeel3/J3PkAe4v76FOoCbYHD1pxThPPswWmFto72jRgWtZxUS', 'System Administrator', 'ROLE_ADMIN', 'ACTIVE', NOW(), NOW()),
-(2, 'john.doe', 'john.doe@ledgerline.com', '$2a$10$r0ftF0PQw942575Ob.ycg./7kckxyWCkweLwJRF1svR8.hnhBkovu', 'John Doe', 'ROLE_ACCOUNT_HOLDER', 'ACTIVE', NOW(), NOW()),
-(3, 'auditor', 'auditor@ledgerline.com', '$2a$10$1EEYR2vd3Rh6sMDyiBZ33O2a9NnRfL.srWmp/qM5phvEPWCWoZiVy', 'Lead Compliance Auditor', 'ROLE_AUDITOR', 'ACTIVE', NOW(), NOW()),
-(4, 'jane.smith', 'jane.smith@ledgerline.com', '$2a$10$r0ftF0PQw942575Ob.ycg./7kckxyWCkweLwJRF1svR8.hnhBkovu', 'Jane Smith', 'ROLE_ACCOUNT_HOLDER', 'ACTIVE', NOW(), NOW());
+(2, 'john_doe', 'john.doe@ledgerline.com', '$2a$10$r0ftF0PQw942575Ob.ycg./7kckxyWCkweLwJRF1svR8.hnhBkovu', 'John Doe', 'ROLE_ACCOUNT_HOLDER', 'ACTIVE', NOW(), NOW()),
+(3, 'auditor_jane', 'auditor@ledgerline.com', '$2a$10$1EEYR2vd3Rh6sMDyiBZ33O2a9NnRfL.srWmp/qM5phvEPWCWoZiVy', 'Lead Compliance Auditor', 'ROLE_AUDITOR', 'ACTIVE', NOW(), NOW()),
+(4, 'jane_smith', 'jane.smith@ledgerline.com', '$2a$10$r0ftF0PQw942575Ob.ycg./7kckxyWCkweLwJRF1svR8.hnhBkovu', 'Jane Smith', 'ROLE_ACCOUNT_HOLDER', 'ACTIVE', NOW(), NOW());
 
 -- ---------------------------------------------------------------------
 -- 2. Seed Accounts
@@ -38,9 +38,9 @@ INSERT INTO users (id, username, email, password_hash, full_name, role, status, 
 INSERT INTO accounts (id, account_number, user_id, account_name, account_type, balance, currency, status, is_system_account, version, created_at, updated_at) VALUES
 (1, 'SYS-EXTERNAL-DEP-001', NULL, 'External Deposit Clearing Account', 'SYSTEM_CLEARING', -20500.0000, 'USD', 'ACTIVE', TRUE, 0, NOW(), NOW()),
 (2, 'SYS-EXTERNAL-WTH-001', NULL, 'External Withdrawal Clearing Account', 'SYSTEM_CLEARING', 0.0000, 'USD', 'ACTIVE', TRUE, 0, NOW(), NOW()),
-(3, 'ACC1000000001', 2, 'John Doe Primary Checking', 'CHECKING', 5000.0000, 'USD', 'ACTIVE', FALSE, 0, NOW(), NOW()),
-(4, 'ACC1000000002', 2, 'John Doe High Yield Savings', 'SAVINGS', 12500.0000, 'USD', 'ACTIVE', FALSE, 0, NOW(), NOW()),
-(5, 'ACC2000000001', 4, 'Jane Smith Everyday Checking', 'CHECKING', 3000.0000, 'USD', 'ACTIVE', FALSE, 0, NOW(), NOW());
+(3, 'LL-1001-JOHN0001', 2, 'John Doe Primary Checking', 'CHECKING', 5000.0000, 'USD', 'ACTIVE', FALSE, 0, NOW(), NOW()),
+(4, 'LL-1001-JOHN0002', 2, 'John Doe High Yield Savings', 'SAVINGS', 12500.0000, 'USD', 'ACTIVE', FALSE, 0, NOW(), NOW()),
+(5, 'LL-1002-JANE0001', 4, 'Jane Smith Everyday Checking', 'CHECKING', 3000.0000, 'USD', 'ACTIVE', FALSE, 0, NOW(), NOW());
 
 -- ---------------------------------------------------------------------
 -- 3. Seed Ledger Transactions (Double-Entry Balanced)
@@ -73,6 +73,6 @@ INSERT INTO ledger_entries (id, transaction_id, account_id, entry_type, amount, 
 -- ---------------------------------------------------------------------
 INSERT INTO audit_logs (id, event_type, username, client_ip, account_number, transaction_reference, status, failure_reason, details, timestamp) VALUES
 (1, 'SYSTEM_INITIALIZATION', 'system', '127.0.0.1', NULL, NULL, 'SUCCESS', NULL, 'Database schema seeded with default roles and accounts', NOW()),
-(2, 'ACCOUNT_CREATED', 'admin', '127.0.0.1', 'ACC1000000001', 'TXN-INIT-001-DEP', 'SUCCESS', NULL, 'Created checking account for John Doe with initial deposit', NOW()),
-(3, 'ACCOUNT_CREATED', 'admin', '127.0.0.1', 'ACC1000000002', 'TXN-INIT-002-DEP', 'SUCCESS', NULL, 'Created savings account for John Doe with initial deposit', NOW()),
-(4, 'ACCOUNT_CREATED', 'admin', '127.0.0.1', 'ACC2000000001', 'TXN-INIT-003-DEP', 'SUCCESS', NULL, 'Created checking account for Jane Smith with initial deposit', NOW());
+(2, 'ACCOUNT_CREATED', 'admin', '127.0.0.1', 'LL-1001-JOHN0001', 'TXN-INIT-001-DEP', 'SUCCESS', NULL, 'Created checking account for John Doe with initial deposit', NOW()),
+(3, 'ACCOUNT_CREATED', 'admin', '127.0.0.1', 'LL-1001-JOHN0002', 'TXN-INIT-002-DEP', 'SUCCESS', NULL, 'Created savings account for John Doe with initial deposit', NOW()),
+(4, 'ACCOUNT_CREATED', 'admin', '127.0.0.1', 'LL-1002-JANE0001', 'TXN-INIT-003-DEP', 'SUCCESS', NULL, 'Created checking account for Jane Smith with initial deposit', NOW());

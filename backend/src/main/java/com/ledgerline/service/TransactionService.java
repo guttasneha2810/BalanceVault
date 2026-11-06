@@ -17,8 +17,8 @@ import com.ledgerline.util.TransactionReferenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,25 +36,26 @@ public class TransactionService {
     private final DoubleEntryLedgerService ledgerService;
     private final IdempotencyService idempotencyService;
     private final AuditLogService auditLogService;
+    private final TransactionTemplate transactionTemplate;
 
     public TransactionService(
             AccountRepository accountRepository,
             DoubleEntryLedgerService ledgerService,
             IdempotencyService idempotencyService,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            PlatformTransactionManager transactionManager) {
         this.accountRepository = accountRepository;
         this.ledgerService = ledgerService;
         this.idempotencyService = idempotencyService;
         this.auditLogService = auditLogService;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
     /**
      * Executes an external money deposit into an account.
-     * Uses pessimistic locking on the target account.
      */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public TransactionResponse deposit(DepositRequest request, String idempotencyKey, UserPrincipal principal, String clientIp) {
-        // 1. Idempotency Check
+        // 1. Check or register idempotency key (independent transaction)
         Optional<TransactionResponse> cached = idempotencyService.checkOrLock(
                 idempotencyKey,
                 principal.getId(),
@@ -70,57 +71,57 @@ public class TransactionService {
         try {
             validateAmount(request.getAmount());
 
-            // Pessimistic write lock on target account
-            Account account = accountRepository.findByAccountNumberWithLock(request.getAccountNumber())
-                    .orElseThrow(() -> new AccountNotFoundException("Account not found: " + request.getAccountNumber()));
+            // 2. Execute financial balance update and ledger entry inside isolated business transaction
+            TransactionResponse response = transactionTemplate.execute(status -> {
+                Account account = accountRepository.findByAccountNumberWithLock(request.getAccountNumber())
+                        .orElseThrow(() -> new AccountNotFoundException("Account not found: " + request.getAccountNumber()));
 
-            validateAccountActive(account);
+                validateAccountActive(account);
 
-            Account clearingAccount = getOrCreateClearingAccount(SYSTEM_DEP_CLEARING, "System External Deposit Clearing");
+                Account clearingAccount = getOrCreateClearingAccount(SYSTEM_DEP_CLEARING, "System External Deposit Clearing");
 
-            BigDecimal amount = request.getAmount().setScale(4, RoundingMode.HALF_UP);
+                BigDecimal amount = request.getAmount().setScale(4, RoundingMode.HALF_UP);
 
-            // Update balances atomically
-            account.setBalance(account.getBalance().add(amount));
-            clearingAccount.setBalance(clearingAccount.getBalance().subtract(amount));
+                account.setBalance(account.getBalance().add(amount));
+                clearingAccount.setBalance(clearingAccount.getBalance().subtract(amount));
 
-            accountRepository.save(account);
-            accountRepository.save(clearingAccount);
+                accountRepository.save(account);
+                accountRepository.save(clearingAccount);
 
-            // Record double-entry ledger entries
-            LedgerTransaction txn = ledgerService.recordExternalDeposit(
-                    ref,
-                    clearingAccount,
-                    account,
-                    amount,
-                    account.getCurrency(),
-                    request.getDescription(),
-                    principal.getId(),
-                    idempotencyKey
-            );
+                LedgerTransaction txn = ledgerService.recordExternalDeposit(
+                        ref,
+                        clearingAccount,
+                        account,
+                        amount,
+                        account.getCurrency(),
+                        request.getDescription(),
+                        principal.getId(),
+                        idempotencyKey
+                );
 
-            TransactionResponse response = new TransactionResponse(
-                    txn.getTransactionReference(),
-                    TransactionType.DEPOSIT,
-                    amount,
-                    account.getCurrency(),
-                    TransactionStatus.COMPLETED,
-                    request.getDescription(),
-                    SYSTEM_DEP_CLEARING,
-                    account.getAccountNumber(),
-                    txn.getCreatedAt()
-            );
+                return new TransactionResponse(
+                        txn.getTransactionReference(),
+                        TransactionType.DEPOSIT,
+                        amount,
+                        account.getCurrency(),
+                        TransactionStatus.COMPLETED,
+                        request.getDescription(),
+                        SYSTEM_DEP_CLEARING,
+                        account.getAccountNumber(),
+                        txn.getCreatedAt()
+                );
+            });
 
-            // Record audit and idempotency completion
+            // 3. Record audit and idempotency success
             auditLogService.logEvent(
                     AuditEventType.DEPOSIT_SUCCESS,
                     principal.getUsername(),
                     clientIp,
-                    account.getAccountNumber(),
+                    request.getAccountNumber(),
                     ref,
                     "SUCCESS",
                     null,
-                    "Deposited " + amount + " " + account.getCurrency()
+                    "Deposited " + request.getAmount()
             );
 
             idempotencyService.recordSuccess(idempotencyKey, 200, response);
@@ -145,9 +146,7 @@ public class TransactionService {
     /**
      * Executes an external withdrawal with atomic balance validation under pessimistic lock.
      */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public TransactionResponse withdraw(WithdrawRequest request, String idempotencyKey, UserPrincipal principal, String clientIp) {
-        // 1. Idempotency Check
         Optional<TransactionResponse> cached = idempotencyService.checkOrLock(
                 idempotencyKey,
                 principal.getId(),
@@ -163,65 +162,63 @@ public class TransactionService {
         try {
             validateAmount(request.getAmount());
 
-            // Lock source account
-            Account account = accountRepository.findByAccountNumberWithLock(request.getAccountNumber())
-                    .orElseThrow(() -> new AccountNotFoundException("Account not found: " + request.getAccountNumber()));
+            TransactionResponse response = transactionTemplate.execute(status -> {
+                Account account = accountRepository.findByAccountNumberWithLock(request.getAccountNumber())
+                        .orElseThrow(() -> new AccountNotFoundException("Account not found: " + request.getAccountNumber()));
 
-            // Validate ownership
-            validateOwnership(account, principal);
-            validateAccountActive(account);
+                validateOwnership(account, principal);
+                validateAccountActive(account);
 
-            BigDecimal amount = request.getAmount().setScale(4, RoundingMode.HALF_UP);
+                BigDecimal amount = request.getAmount().setScale(4, RoundingMode.HALF_UP);
 
-            // Atomic balance verification under row lock
-            if (account.getBalance().compareTo(amount) < 0) {
-                throw new InsufficientFundsException(String.format(
-                        "Insufficient funds in account %s. Current balance: %s, Requested withdrawal: %s",
-                        account.getAccountNumber(), account.getBalance(), amount));
-            }
+                // Atomic balance verification under row lock
+                if (account.getBalance().compareTo(amount) < 0) {
+                    throw new InsufficientFundsException(String.format(
+                            "Insufficient funds in account %s. Current balance: %s, Requested withdrawal: %s",
+                            account.getAccountNumber(), account.getBalance(), amount));
+                }
 
-            Account clearingAccount = getOrCreateClearingAccount(SYSTEM_WTH_CLEARING, "System External Withdrawal Clearing");
+                Account clearingAccount = getOrCreateClearingAccount(SYSTEM_WTH_CLEARING, "System External Withdrawal Clearing");
 
-            // Update balances atomically
-            account.setBalance(account.getBalance().subtract(amount));
-            clearingAccount.setBalance(clearingAccount.getBalance().add(amount));
+                account.setBalance(account.getBalance().subtract(amount));
+                clearingAccount.setBalance(clearingAccount.getBalance().add(amount));
 
-            accountRepository.save(account);
-            accountRepository.save(clearingAccount);
+                accountRepository.save(account);
+                accountRepository.save(clearingAccount);
 
-            // Record double-entry ledger entries
-            LedgerTransaction txn = ledgerService.recordExternalWithdrawal(
-                    ref,
-                    account,
-                    clearingAccount,
-                    amount,
-                    account.getCurrency(),
-                    request.getDescription(),
-                    principal.getId(),
-                    idempotencyKey
-            );
+                LedgerTransaction txn = ledgerService.recordExternalWithdrawal(
+                        ref,
+                        account,
+                        clearingAccount,
+                        amount,
+                        account.getCurrency(),
+                        request.getDescription(),
+                        principal.getId(),
+                        idempotencyKey
+                );
 
-            TransactionResponse response = new TransactionResponse(
-                    txn.getTransactionReference(),
-                    TransactionType.WITHDRAWAL,
-                    amount,
-                    account.getCurrency(),
-                    TransactionStatus.COMPLETED,
-                    request.getDescription(),
-                    account.getAccountNumber(),
-                    SYSTEM_WTH_CLEARING,
-                    txn.getCreatedAt()
-            );
+                return new TransactionResponse(
+                        txn.getTransactionReference(),
+                        TransactionType.WITHDRAWAL,
+                        amount,
+                        account.getCurrency(),
+                        TransactionStatus.COMPLETED,
+                        request.getDescription(),
+                        account.getAccountNumber(),
+                        SYSTEM_WTH_CLEARING,
+                        txn.getCreatedAt()
+                );
+            });
 
             auditLogService.logEvent(
                     AuditEventType.WITHDRAW_SUCCESS,
                     principal.getUsername(),
                     clientIp,
-                    account.getAccountNumber(),
+                    request.getAccountNumber(),
                     ref,
                     "SUCCESS",
                     null,
-                    "Withdrew " + amount + " " + account.getCurrency()
+                    "Withdrew " + request.getAmount()
             );
 
             idempotencyService.recordSuccess(idempotencyKey, 200, response);
@@ -246,9 +243,7 @@ public class TransactionService {
     /**
      * Executes an internal transfer between two accounts with deadlock-free lock ordering.
      */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public TransactionResponse transfer(TransferRequest request, String idempotencyKey, UserPrincipal principal, String clientIp) {
-        // 1. Idempotency Check
         Optional<TransactionResponse> cached = idempotencyService.checkOrLock(
                 idempotencyKey,
                 principal.getId(),
@@ -268,82 +263,81 @@ public class TransactionService {
                 throw new InvalidTransactionException("Source and destination accounts cannot be identical");
             }
 
-            // Retrieve account IDs without locking first to compute consistent locking order
-            Account srcBasic = accountRepository.findByAccountNumber(request.getSourceAccountNumber())
-                    .orElseThrow(() -> new AccountNotFoundException("Source account not found: " + request.getSourceAccountNumber()));
+            TransactionResponse response = transactionTemplate.execute(status -> {
+                // Fetch basic entities to compute ascending locking order
+                Account srcBasic = accountRepository.findByAccountNumber(request.getSourceAccountNumber())
+                        .orElseThrow(() -> new AccountNotFoundException("Source account not found: " + request.getSourceAccountNumber()));
 
-            Account dstBasic = accountRepository.findByAccountNumber(request.getDestinationAccountNumber())
-                    .orElseThrow(() -> new AccountNotFoundException("Destination account not found: " + request.getDestinationAccountNumber()));
+                Account dstBasic = accountRepository.findByAccountNumber(request.getDestinationAccountNumber())
+                        .orElseThrow(() -> new AccountNotFoundException("Destination account not found: " + request.getDestinationAccountNumber()));
 
-            // Validate source ownership before acquiring locks
-            validateOwnership(srcBasic, principal);
+                validateOwnership(srcBasic, principal);
 
-            // =========================================================================
-            // DEADLOCK PREVENTION STRATEGY: Consistent Ascending Numerical ID Locking
-            // =========================================================================
-            Long id1 = srcBasic.getId().compareTo(dstBasic.getId()) < 0 ? srcBasic.getId() : dstBasic.getId();
-            Long id2 = srcBasic.getId().compareTo(dstBasic.getId()) < 0 ? dstBasic.getId() : srcBasic.getId();
+                // =========================================================================
+                // DEADLOCK PREVENTION STRATEGY: Consistent Ascending Numerical ID Locking
+                // =========================================================================
+                Long id1 = srcBasic.getId().compareTo(dstBasic.getId()) < 0 ? srcBasic.getId() : dstBasic.getId();
+                Long id2 = srcBasic.getId().compareTo(dstBasic.getId()) < 0 ? dstBasic.getId() : srcBasic.getId();
 
-            Account firstLocked = accountRepository.findByIdWithLock(id1)
-                    .orElseThrow(() -> new AccountNotFoundException("Account lock acquisition failed for ID: " + id1));
-            Account secondLocked = accountRepository.findByIdWithLock(id2)
-                    .orElseThrow(() -> new AccountNotFoundException("Account lock acquisition failed for ID: " + id2));
+                Account firstLocked = accountRepository.findByIdWithLock(id1)
+                        .orElseThrow(() -> new AccountNotFoundException("Account lock acquisition failed for ID: " + id1));
+                Account secondLocked = accountRepository.findByIdWithLock(id2)
+                        .orElseThrow(() -> new AccountNotFoundException("Account lock acquisition failed for ID: " + id2));
 
-            Account sourceAccount = firstLocked.getId().equals(srcBasic.getId()) ? firstLocked : secondLocked;
-            Account destinationAccount = firstLocked.getId().equals(dstBasic.getId()) ? firstLocked : secondLocked;
+                Account sourceAccount = firstLocked.getId().equals(srcBasic.getId()) ? firstLocked : secondLocked;
+                Account destinationAccount = firstLocked.getId().equals(dstBasic.getId()) ? firstLocked : secondLocked;
 
-            validateAccountActive(sourceAccount);
-            validateAccountActive(destinationAccount);
+                validateAccountActive(sourceAccount);
+                validateAccountActive(destinationAccount);
 
-            BigDecimal amount = request.getAmount().setScale(4, RoundingMode.HALF_UP);
+                BigDecimal amount = request.getAmount().setScale(4, RoundingMode.HALF_UP);
 
-            // Atomic balance verification under row lock
-            if (sourceAccount.getBalance().compareTo(amount) < 0) {
-                throw new InsufficientFundsException(String.format(
-                        "Insufficient funds in source account %s. Current balance: %s, Transfer amount: %s",
-                        sourceAccount.getAccountNumber(), sourceAccount.getBalance(), amount));
-            }
+                // Atomic balance verification under row lock
+                if (sourceAccount.getBalance().compareTo(amount) < 0) {
+                    throw new InsufficientFundsException(String.format(
+                            "Insufficient funds in source account %s. Current balance: %s, Transfer amount: %s",
+                            sourceAccount.getAccountNumber(), sourceAccount.getBalance(), amount));
+                }
 
-            // Update balances atomically
-            sourceAccount.setBalance(sourceAccount.getBalance().subtract(amount));
-            destinationAccount.setBalance(destinationAccount.getBalance().add(amount));
+                sourceAccount.setBalance(sourceAccount.getBalance().subtract(amount));
+                destinationAccount.setBalance(destinationAccount.getBalance().add(amount));
 
-            accountRepository.save(sourceAccount);
-            accountRepository.save(destinationAccount);
+                accountRepository.save(sourceAccount);
+                accountRepository.save(destinationAccount);
 
-            // Record double-entry ledger entries
-            LedgerTransaction txn = ledgerService.recordInternalTransfer(
-                    ref,
-                    sourceAccount,
-                    destinationAccount,
-                    amount,
-                    sourceAccount.getCurrency(),
-                    request.getDescription(),
-                    principal.getId(),
-                    idempotencyKey
-            );
+                LedgerTransaction txn = ledgerService.recordInternalTransfer(
+                        ref,
+                        sourceAccount,
+                        destinationAccount,
+                        amount,
+                        sourceAccount.getCurrency(),
+                        request.getDescription(),
+                        principal.getId(),
+                        idempotencyKey
+                );
 
-            TransactionResponse response = new TransactionResponse(
-                    txn.getTransactionReference(),
-                    TransactionType.TRANSFER,
-                    amount,
-                    sourceAccount.getCurrency(),
-                    TransactionStatus.COMPLETED,
-                    request.getDescription(),
-                    sourceAccount.getAccountNumber(),
-                    destinationAccount.getAccountNumber(),
-                    txn.getCreatedAt()
-            );
+                return new TransactionResponse(
+                        txn.getTransactionReference(),
+                        TransactionType.TRANSFER,
+                        amount,
+                        sourceAccount.getCurrency(),
+                        TransactionStatus.COMPLETED,
+                        request.getDescription(),
+                        sourceAccount.getAccountNumber(),
+                        destinationAccount.getAccountNumber(),
+                        txn.getCreatedAt()
+                );
+            });
 
             auditLogService.logEvent(
                     AuditEventType.TRANSFER_SUCCESS,
                     principal.getUsername(),
                     clientIp,
-                    sourceAccount.getAccountNumber(),
+                    request.getSourceAccountNumber(),
                     ref,
                     "SUCCESS",
                     null,
-                    "Transferred " + amount + " to " + destinationAccount.getAccountNumber()
+                    "Transferred " + request.getAmount() + " to " + request.getDestinationAccountNumber()
             );
 
             idempotencyService.recordSuccess(idempotencyKey, 200, response);

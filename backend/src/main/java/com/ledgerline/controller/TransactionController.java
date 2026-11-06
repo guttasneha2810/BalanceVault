@@ -5,6 +5,7 @@ import com.ledgerline.entity.LedgerTransaction;
 import com.ledgerline.repository.LedgerTransactionRepository;
 import com.ledgerline.security.UserPrincipal;
 import com.ledgerline.service.TransactionService;
+import com.ledgerline.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +22,12 @@ public class TransactionController {
 
     private final TransactionService transactionService;
     private final LedgerTransactionRepository transactionRepository;
+    private final SecurityUtils securityUtils;
 
-    public TransactionController(TransactionService transactionService, LedgerTransactionRepository transactionRepository) {
+    public TransactionController(TransactionService transactionService, LedgerTransactionRepository transactionRepository, SecurityUtils securityUtils) {
         this.transactionService = transactionService;
         this.transactionRepository = transactionRepository;
+        this.securityUtils = securityUtils;
     }
 
     @PostMapping("/deposit")
@@ -35,8 +38,9 @@ public class TransactionController {
             @AuthenticationPrincipal UserPrincipal principal,
             HttpServletRequest servletRequest) {
 
+        UserPrincipal activePrincipal = securityUtils.getCurrentPrincipal(principal);
         String clientIp = getClientIp(servletRequest);
-        TransactionResponse response = transactionService.deposit(request, idempotencyKey, principal, clientIp);
+        TransactionResponse response = transactionService.deposit(request, idempotencyKey, activePrincipal, clientIp);
         return ResponseEntity.ok(ApiResponse.success("Deposit processed successfully", response));
     }
 
@@ -48,8 +52,9 @@ public class TransactionController {
             @AuthenticationPrincipal UserPrincipal principal,
             HttpServletRequest servletRequest) {
 
+        UserPrincipal activePrincipal = securityUtils.getCurrentPrincipal(principal);
         String clientIp = getClientIp(servletRequest);
-        TransactionResponse response = transactionService.withdraw(request, idempotencyKey, principal, clientIp);
+        TransactionResponse response = transactionService.withdraw(request, idempotencyKey, activePrincipal, clientIp);
         return ResponseEntity.ok(ApiResponse.success("Withdrawal processed successfully", response));
     }
 
@@ -61,19 +66,21 @@ public class TransactionController {
             @AuthenticationPrincipal UserPrincipal principal,
             HttpServletRequest servletRequest) {
 
+        UserPrincipal activePrincipal = securityUtils.getCurrentPrincipal(principal);
         String clientIp = getClientIp(servletRequest);
-        TransactionResponse response = transactionService.transfer(request, idempotencyKey, principal, clientIp);
+        TransactionResponse response = transactionService.transfer(request, idempotencyKey, activePrincipal, clientIp);
         return ResponseEntity.ok(ApiResponse.success("Transfer processed successfully", response));
     }
 
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<TransactionResponse>>> getTransactionHistory(
             @AuthenticationPrincipal UserPrincipal principal) {
+        UserPrincipal activePrincipal = securityUtils.getCurrentPrincipal(principal);
         List<LedgerTransaction> txns;
-        if (principal.getRole() == com.ledgerline.enums.Role.ROLE_ADMIN || principal.getRole() == com.ledgerline.enums.Role.ROLE_AUDITOR) {
+        if (activePrincipal.getRole() == com.ledgerline.enums.Role.ROLE_ADMIN || activePrincipal.getRole() == com.ledgerline.enums.Role.ROLE_AUDITOR) {
             txns = transactionRepository.findAllByOrderByCreatedAtDesc();
         } else {
-            txns = transactionRepository.findByInitiatedByUserIdOrderByCreatedAtDesc(principal.getId());
+            txns = transactionRepository.findByInitiatedByUserIdOrderByCreatedAtDesc(activePrincipal.getId());
         }
 
         List<TransactionResponse> responseList = txns.stream()

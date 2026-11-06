@@ -166,3 +166,17 @@ All 15 automated tests passed cleanly with 0 failures and 0 errors.
 1. **Threat Modeling:** Authored `THREATS.md` with complete STRIDE categorization, detailing the 12 primary financial threats, attack scenarios, architectural defenses, and verification tests.
 2. **Engineering Transparency:** Documented genuine development milestones in `PROMPTS.md` reflecting the exact Git log and technical problem-solving history.
 3. **Comprehensive README:** Created `README.md` containing full architecture diagrams, database setup commands, backend/frontend startup steps, API endpoint definitions, and a structured 5-minute video demo script.
+
+---
+
+## Record 07: Seed Script Alignment & End-to-End System Integration
+* **Date & Timestamp:** 2026-11-06 16:50:00 IST  
+* **Associated Git Commit:** `063ed41 - fix(database): align seed usernames and account numbers with demo credentials and UI`
+
+### User Prompt:
+> Verify that every HTML page connects to the correct backend REST API. Check login, registration, dashboard, deposits, withdrawals, transfers and statements. Verify database schema and seed scripts against documentation. Report any incomplete functionality honestly.
+
+### AI Assistance & Technical Decisions:
+1. **Credential Alignment:** Synchronized `database/seed.sql` user credentials (`john_doe`, `jane_smith`, `auditor_jane`, `admin`) and account numbers (`LL-1001-JOHN0001`, `LL-1001-JOHN0002`, `LL-1002-JANE0001`) with the quick-fill login options and documentation.
+2. **End-to-End Audit:** Verified that all 11 HTML pages correctly map form identifiers, HTTP methods, authorization headers, and JSON schemas to the Spring Boot REST controllers.
+3. **Testing Verification:** Confirmed that all 15 automated domain, concurrency, and financial integrity tests pass cleanly with 0 failures and 0 errors.

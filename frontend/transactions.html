@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History | LedgerLine Financial Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-badge">LL</div>
+                <div class="logo-text">
+                    <h2>LEDGERLINE</h2>
+                    <span>Banking Core</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav" id="sidebar-nav">
+                <!-- Dynamically generated based on user role -->
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-badge">
+                    <div class="user-avatar" id="user-display-avatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="user-display-name">Loading...</div>
+                        <div class="user-role-badge" id="user-display-role">Account Holder</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper" style="margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; display: flex; flex-direction: column;">
+            <header class="top-header" style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h1 class="page-title" style="font-size:22px;font-weight:700;color:#0f172a;">Transaction History</h1>
+                    <p style="font-size:13px;color:#64748b;">Complete historical journal of financial settlements</p>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;">
+                    <button class="btn btn-outline btn-sm" onclick="loadTransactionsHistory()">↻ Refresh</button>
+                    <button class="btn btn-outline btn-sm" onclick="Auth.logout()">
+                        Sign Out
+                    </button>
+                </div>
+            </header>
+
+            <main class="content-body" style="padding:28px;flex:1;">
+                <div class="card" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:var(--shadow-sm);">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                        <div>
+                            <h3 style="font-size:16px;font-weight:700;color:#0f172a;">Financial Transactions</h3>
+                            <p style="font-size:13px;color:#64748b;">Immutable journal of deposits, withdrawals, and wire transfers</p>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Settled At</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-table-body">
+                                <tr>
+                                    <td colspan="6" style="text-align:center;padding:24px;">Loading transactions...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/transactions.js"></script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LedgerLine | High-Integrity Financial Transaction Management</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+    <style>
+        .landing-hero {
+            background: radial-gradient(circle at 80% 20%, #1e1b4b 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 80px 24px 60px;
+            text-align: center;
+        }
+        .hero-title {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-subtitle {
+            font-size: 18px;
+            color: #94a3b8;
+            max-width: 680px;
+            margin: 0 auto 32px;
+            line-height: 1.6;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            max-width: 1100px;
+            margin: -40px auto 60px;
+            padding: 0 24px;
+        }
+        .feature-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.15);
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: #eef2ff;
+            color: #4f46e5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        .feature-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+        .feature-desc {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <header style="background:#0f172a;border-bottom:1px solid rgba(255,255,255,0.08);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="logo-badge">LL</div>
+            <div class="logo-text">
+                <h2>LEDGERLINE</h2>
+                <span>Financial Engine</span>
+            </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+            <a href="login.html" class="btn btn-outline" style="color:#ffffff;border-color:rgba(255,255,255,0.2);">Sign In</a>
+            <a href="register.html" class="btn btn-primary">Open Account</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="landing-hero">
+            <div style="display:inline-block;background:rgba(79,70,229,0.2);color:#a5b4fc;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;border:1px solid rgba(165,180,252,0.3);">
+                Snovasys Fresher Hiring Challenge 2026
+            </div>
+            <h1 class="hero-title">High-Integrity Double-Entry<br>Financial Transaction Platform</h1>
+            <p class="hero-subtitle">
+                Engineered with strict zero-sum double-entry accounting, pessimistic row locking, cryptographic idempotency deduplication, and an immutable non-repudiation audit trail.
+            </p>
+            <div style="display:flex;gap:16px;justify-content:center;margin-top:28px;">
+                <a href="login.html" class="btn btn-primary btn-lg" style="box-shadow:0 10px 20px rgba(79,70,229,0.4);">Access Banking Portal</a>
+                <a href="register.html" class="btn btn-outline btn-lg" style="color:#ffffff;border-color:rgba(255,255,255,0.25);">Create New Account</a>
+            </div>
+        </section>
+
+        <section class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚖️</div>
+                <h3 class="feature-title">Double-Entry Accounting</h3>
+                <p class="feature-desc">
+                    Every transfer generates immutable debit and credit entries guaranteeing &Sigma; signed entries = 0. External clearing accounts ensure total journal balance.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3 class="feature-title">Deadlock-Free Row Locking</h3>
+                <p class="feature-desc">
+                    Accounts are locked in strictly ascending numerical ID order under pessimistic write locks, eliminating cyclic deadlocks during high-concurrency transfers.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Cryptographic Idempotency</h3>
+                <p class="feature-desc">
+                    SHA-256 payload fingerprinting and unique database key constraints ensure safe retries, payload collision detection, and zero double-spending.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3 class="feature-title">Role-Based Access Control</h3>
+                <p class="feature-desc">
+                    Strict separation of duties between <strong>Account Holder</strong>, <strong>Administrator</strong>, and read-only <strong>Compliance Auditor</strong>.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📜</div>
+                <h3 class="feature-title">Immutable Audit Trail</h3>
+                <p class="feature-desc">
+                    Autonomous, isolated audit logging (REQUIRES_NEW) records both successful executions and refused attempts with client IP and forensic details.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">Running Balance Statements</h3>
+                <p class="feature-desc">
+                    Point-in-time financial statements with running balances, verified against ledger entries for complete auditability.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer style="background:#0f172a;color:#64748b;padding:32px;text-align:center;font-size:13px;border-top:1px solid rgba(255,255,255,0.06);">
+        <p>&copy; 2026 LEDGERLINE Financial Systems. Built for Snovasys Fresher Hiring Challenge 2026.</p>
+        <p style="margin-top:6px;font-size:12px;color:#475569;">Tech Stack: Java 21 LTS &bull; Spring Boot 3.3.5 &bull; Spring Security JWT &bull; MySQL 8.0 &bull; Vanilla JS</p>
+    </footer>
+</body>
+</html>

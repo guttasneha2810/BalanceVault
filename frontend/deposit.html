@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit Funds | LedgerLine Financial Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-badge">LL</div>
+                <div class="logo-text">
+                    <h2>LEDGERLINE</h2>
+                    <span>Banking Core</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav" id="sidebar-nav">
+                <!-- Dynamically generated based on user role -->
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-badge">
+                    <div class="user-avatar" id="user-display-avatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="user-display-name">Loading...</div>
+                        <div class="user-role-badge" id="user-display-role">Account Holder</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper" style="margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; display: flex; flex-direction: column;">
+            <header class="top-header" style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h1 class="page-title" style="font-size:22px;font-weight:700;color:#0f172a;">Deposit Funds</h1>
+                    <p style="font-size:13px;color:#64748b;">Inject capital into your account via external clearing</p>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;">
+                    <button class="btn btn-outline btn-sm" onclick="Auth.logout()">
+                        Sign Out
+                    </button>
+                </div>
+            </header>
+
+            <main class="content-body" style="padding:28px;flex:1;display:flex;justify-content:center;align-items:flex-start;">
+                <div class="card" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:32px;max-width:560px;width:100%;box-shadow:var(--shadow-sm);">
+                    <div class="card-header" style="margin-bottom:24px;">
+                        <h3 style="font-size:18px;font-weight:700;color:#0f172a;">Funds Deposit Request</h3>
+                        <p style="font-size:13px;color:#64748b;">
+                            Deposits are cleared through the system external deposit account (<code>SYS-EXTERNAL-DEP-001</code>) with balanced zero-sum journal entries.
+                        </p>
+                    </div>
+
+                    <form id="form-deposit">
+                        <div class="form-group">
+                            <label class="form-label" for="deposit-account">Destination Account</label>
+                            <select id="deposit-account" class="form-control" required>
+                                <option value="">Loading your accounts...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="deposit-amount">Deposit Amount ($ USD)</label>
+                            <input type="number" id="deposit-amount" class="form-control" placeholder="0.00" step="0.01" min="0.01" required>
+                            <div class="form-hint">Must be strictly greater than $0.00. Processed using exact BigDecimal precision.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="deposit-desc">Description / Reference Note</label>
+                            <input type="text" id="deposit-desc" class="form-control" placeholder="e.g. Salary Credit, Wire Deposit" maxlength="255">
+                        </div>
+
+                        <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px 16px;margin:20px 0;font-size:13px;color:#065f46;">
+                            🔒 <strong>Idempotency Protected:</strong> A unique cryptographic UUID key is sent in the <code>Idempotency-Key</code> header to prevent double deposits on network latency.
+                        </div>
+
+                        <button type="submit" id="btn-submit-deposit" class="btn btn-primary btn-block btn-lg">
+                            Deposit Funds
+                        </button>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/transactions.js"></script>
+</body>
+</html>

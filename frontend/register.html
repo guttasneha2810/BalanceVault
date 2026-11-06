@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | LedgerLine Financial Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+</head>
+<body class="auth-page">
+    <div class="auth-card" style="max-width: 480px;">
+        <div class="auth-brand">
+            <div class="logo-badge">LL</div>
+            <h2>Create Your Account</h2>
+            <p>Join LedgerLine with secure double-entry accounting</p>
+        </div>
+
+        <form id="form-register">
+            <div class="form-group">
+                <label class="form-label" for="reg-fullname">Full Legal Name</label>
+                <input type="text" id="reg-fullname" class="form-control" placeholder="e.g. John Doe" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reg-username">Username</label>
+                <input type="text" id="reg-username" class="form-control" placeholder="Choose a unique username" minlength="3" maxlength="50" required autocomplete="username">
+                <div class="form-hint">At least 3 characters; letters, numbers, underscores.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reg-email">Email Address</label>
+                <input type="email" id="reg-email" class="form-control" placeholder="e.g. john@example.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reg-password">Password</label>
+                <input type="password" id="reg-password" class="form-control" placeholder="Minimum 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="form-hint">At least 8 characters. Hashed using BCrypt on the backend.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reg-confirm-password">Confirm Password</label>
+                <input type="password" id="reg-confirm-password" class="form-control" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+            </div>
+
+            <div style="background:#f1f5f9;border-radius:6px;padding:10px 14px;font-size:12px;color:#475569;margin-bottom:16px;">
+                🛡️ <strong>Security Note:</strong> All registrations are provisioned as <code>ACCOUNT_HOLDER</code>. Administrator and Compliance Auditor roles cannot be self-assigned.
+            </div>
+
+            <button type="submit" id="btn-register-submit" class="btn btn-primary btn-block btn-lg">
+                Create Account
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Already registered? <a href="login.html">Sign In</a> &bull; <a href="index.html">Home</a>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>

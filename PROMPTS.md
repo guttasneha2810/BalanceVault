@@ -157,7 +157,7 @@ All 15 automated tests passed cleanly with 0 failures and 0 errors.
 
 ## Record 06: Threat Modeling, Documentation & Final Verification
 * **Date & Timestamp:** 2026-11-06 15:52:00 IST  
-* **Associated Git Commit:** Current Stage (Documentation & Verification)
+* **Associated Git Commit:** `f0cce8c - docs: complete comprehensive system architecture, threat model, and prompt records`
 
 ### User Prompt:
 > Finalize the project documentation and conduct end-to-end verification. Ensure `THREATS.md`, `PROMPTS.md`, and `README.md` are comprehensive, mathematically accurate, and include full setup commands, API documentation, and a 5-minute video demonstration script. Re-verify that all unit and concurrency tests pass cleanly.

@@ -1,91 +1,145 @@
-# LEDGERLINE – AI Assistance & Development Notes
+# LEDGERLINE – AI Assistance & Engineering Journal
 
-**Candidate:** Naga Sneha  
-**Challenge:** Snovasys Fresher Hiring Challenge 2026  
-**Project:** LEDGERLINE – High-Integrity Financial Transaction Management System  
-**Technology Stack:** Java 21, Spring Boot, MySQL, HTML, CSS, JavaScript
+**Candidate:** Gutta Venkata Naga Sneha
+**Challenge:** Snovasys Fresher Hiring Challenge 2026
+**Project:** LEDGERLINE – Financial Transaction Management System
+**Technology Stack:** Java 21, Spring Boot, Maven, MySQL, HTML, CSS, JavaScript.
 
 ## Overview
 
-AI tools were used as supporting resources during selected stages of LedgerLine development, mainly for initial technical guidance, understanding unfamiliar concepts and exploring possible solutions.
-
-The development process involved reviewing suggestions, modifying code, resolving errors, integrating application components and testing functionality. Technical decisions and final verification were carried out during the development process.
+AI tools were used during selected stages of development for initial guidance, technical clarification and exploring possible solutions. The project involved reviewing suggestions, implementing changes, debugging errors, integrating components and testing application functionality.
 
 ---
 
-## Development Records
+## Record 01 – Project Initialization
 
-### Record 01 – Project Setup and Planning
-**Date:** 06 November 2026  
+**Date:** 06 November 2026
 **Commit:** `9ff261d`
 
-- Used AI assistance to clarify the project structure and technology requirements.
-- Reviewed the Spring Boot and Maven setup.
-- Established the backend, frontend and database directories.
+**Initial Prompt:**
 
-### Record 02 – Database Development
-**Date:** 06 November 2026  
+> I am developing a financial transaction management system using Java 21 and Spring Boot. Suggest a suitable project structure and explain the initial Maven setup with a separate frontend and database directory.
+
+**Development Activities:**
+
+- Set up the Spring Boot backend.
+- Organized the project directories.
+- Configured Java and Maven dependencies.
+
+## Record 02 – Database Design
+
+**Date:** 06 November 2026
 **Commit:** `f5e6e8d`
 
-- Reviewed database design concepts and relationships.
-- Worked with MySQL schema creation and seed data.
-- Focused on account management, transaction records and ledger consistency.
+**Initial Prompt:**
 
-### Record 03 – Backend Implementation
-**Date:** 06 November 2026  
+> Explain how to design a MySQL database for a financial application with users, accounts, transactions and ledger entries. Include suitable relationships and constraints.
+
+**Development Activities:**
+
+- Created database tables and relationships.
+- Worked on account and transaction records.
+- Prepared database schema and seed scripts.
+
+## Record 03 – Backend Development
+
+**Date:** 06 November 2026
 **Commit:** `127cbcf`
 
-- Referred to AI suggestions for understanding Spring Security, JWT and REST API implementation.
-- Developed and integrated backend components.
-- Worked on authentication, authorization, account operations and transaction processing.
+**Initial Prompt:**
 
-### Record 04 – Debugging and Testing
-**Date:** 06 November 2026  
+> Explain the implementation of JWT authentication, role-based access, REST APIs and transaction management using Spring Boot.
+
+**Development Activities:**
+
+- Worked on authentication and authorization.
+- Developed account and transaction operations.
+- Integrated backend services and repositories.
+- Reviewed transaction consistency and security.
+
+## Record 04 – Debugging and Testing
+
+**Date:** 06 November 2026
 **Commit:** `65c8e45`
 
-- Investigated transaction failures and concurrency-related issues.
-- Reviewed database locking and duplicate request handling.
-- Modified the implementation based on debugging observations.
-- Executed backend tests and reviewed the results.
+**Initial Prompt:**
 
-### Record 05 – Frontend Development
-**Date:** 06 November 2026  
+> Explain common concurrency issues in financial applications and how database locking, idempotency and transaction management can help prevent duplicate or inconsistent transactions.
+
+**Development Activities:**
+
+- Investigated concurrency-related failures.
+- Debugged database locking and connection issues.
+- Refined transaction handling.
+- Executed backend tests and reviewed results.
+
+## Record 05 – Frontend Development
+
+**Date:** 06 November 2026
 **Commit:** `9b9c0b4`
 
-- Developed the application interface using HTML, CSS and JavaScript.
-- Integrated frontend pages with backend REST APIs.
-- Worked through authentication, navigation and transaction display issues.
+**Initial Prompt:**
 
-### Record 06 – Documentation and Security Review
-**Date:** 06 November 2026  
+> Suggest a clean banking dashboard layout using HTML, CSS and JavaScript, with login, registration, account management, transaction history and statement pages.
+
+**Development Activities:**
+
+- Developed frontend pages and styling.
+- Integrated pages with backend APIs.
+- Worked on authentication, navigation and transaction displays.
+- Fixed interface and integration issues.
+
+## Record 06 – Security and Documentation
+
+**Date:** 06 November 2026
 **Commit:** `f0cce8c`
 
-- Reviewed application security concepts and potential threats.
-- Prepared project documentation and setup instructions.
-- Documented important design decisions and security considerations.
+**Initial Prompt:**
 
-### Record 07 – Integration Improvements
-**Date:** 06 November 2026  
+> Explain common security threats in a financial transaction application and suggest ways to document authentication, authorization, data integrity and audit-related risks.
+
+**Development Activities:**
+
+- Reviewed application security considerations.
+- Prepared the threat model.
+- Updated README and project documentation.
+
+## Record 07 – Integration Improvements
+
+**Date:** 06 November 2026
 **Commit:** `063ed41`
 
-- Checked consistency between database seed data and application configuration.
-- Corrected mismatches in demo user information and account details.
-- Reviewed the application's main user flows.
+**Initial Prompt:**
 
-### Record 08 – Final Refinements
-**Date:** 08 November 2026  
+> Help me review the consistency between database seed data, demo users, account information and application configuration.
+
+**Development Activities:**
+
+- Checked database and application configuration.
+- Corrected mismatches in demo user information.
+- Reviewed the main application flows.
+
+## Record 08 – Final Refinements
+
+**Date:** 08 November 2026
 **Commit:** `6ca792f`
 
-- Updated development documentation.
-- Reviewed seed data and demo information for consistency.
-- Made final project refinements.
+**Initial Prompt:**
+
+> Review the project documentation and identify inconsistencies in the setup instructions and demo information.
+
+**Development Activities:**
+
+- Refined project documentation.
+- Reviewed demo information.
+- Updated development records.
 
 ---
 
 ## Responsible Use of AI
 
-AI tools were used to support learning, technical exploration and selected implementation tasks.
+AI tools were used as supporting resources for technical guidance, concept clarification and exploring implementation approaches.
 
-The development process also involved independent troubleshooting, code modifications, application integration and testing.
+The development process involved reviewing suggestions, modifying code, troubleshooting errors, integrating application components and executing tests.
 
-The candidate is responsible for understanding the project architecture, implementation choices and application behaviour and for explaining them during evaluation.
+The candidate is responsible for understanding the application architecture, implementation choices and technical decisions and for explaining the project during evaluation.

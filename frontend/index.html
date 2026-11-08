@@ -21,6 +21,7 @@
             margin-bottom: 16px;
             background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .hero-subtitle {
@@ -155,5 +156,13 @@
         <p>&copy; 2026 LEDGERLINE Financial Systems. Built for Snovasys Fresher Hiring Challenge 2026.</p>
         <p style="margin-top:6px;font-size:12px;color:#475569;">Tech Stack: Java 21 LTS &bull; Spring Boot 3.3.5 &bull; Spring Security JWT &bull; MySQL 8.0 &bull; Vanilla JS</p>
     </footer>
+    <script>
+    // Keep the user on the homepage when browser Back is pressed.
+        history.pushState({ page: 'home' }, '', window.location.href);
+
+        window.addEventListener('popstate', function () {
+            history.pushState({ page: 'home' }, '', window.location.href);
+        });
+    </script>
 </body>
 </html>

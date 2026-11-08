@@ -80,6 +80,12 @@ public class AccountService {
         return mapToResponse(account);
     }
 
+    @Transactional(readOnly = true)
+    public List<AccountResponse> getAllAccounts() {
+        return accountRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
     @Transactional
     public AccountResponse updateAccountStatus(Long accountId, AccountStatus status) {
         Account account = accountRepository.findById(accountId)

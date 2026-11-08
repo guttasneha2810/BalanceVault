@@ -11,6 +11,7 @@ public class TransactionResponse {
     private String transactionReference;
     private TransactionType transactionType;
     private BigDecimal amount;
+    private BigDecimal signedAmount;
     private String currency;
     private TransactionStatus status;
     private String description;
@@ -103,5 +104,13 @@ public class TransactionResponse {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+    
+    public BigDecimal getSignedAmount() {
+        return signedAmount;
+    }
+
+    public void setSignedAmount(BigDecimal signedAmount) {
+        this.signedAmount = signedAmount;
     }
 }

@@ -106,7 +106,7 @@ async function loadAdminDashboard() {
         const logs = logsRes.data || [];
 
         let totalLiquidity = 0;
-        accounts.filter(a => !a.isSystemAccount).forEach(a => {
+        accounts.filter(a => !a.systemAccount).forEach(a => {
             totalLiquidity += parseFloat(a.balance || 0);
         });
 
@@ -201,9 +201,12 @@ function renderTransactionsTable(transactions) {
     }
 
     tableBody.innerHTML = transactions.map(t => {
-        const isPositive = t.transactionType === 'DEPOSIT';
-        const sign = isPositive ? '+' : '-';
-        const amountClass = isPositive ? 'amount-positive' : 'amount-negative';
+        const isPositive = t.signedAmount !== null && t.signedAmount !== undefined
+        ? Number(t.signedAmount) >= 0
+        : t.transactionType === 'DEPOSIT';
+
+    const sign = isPositive ? '+' : '-';
+    const amountClass = isPositive ? 'amount-positive' : 'amount-negative';
 
         return `
             <tr>

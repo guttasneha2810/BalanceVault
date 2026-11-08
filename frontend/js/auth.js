@@ -2,7 +2,7 @@
  * LEDGERLINE - Authentication & Session Management
  */
 
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'http://localhost:8082/api';
 
 const Auth = {
     getToken() {
@@ -40,7 +40,7 @@ const Auth = {
 
     requireAuth(allowedRoles = []) {
         if (!this.isAuthenticated()) {
-            window.location.href = 'login.html';
+            window.location.replace('login.html');
             return false;
         }
 
@@ -52,12 +52,60 @@ const Auth = {
 
         return true;
     },
+        logout() {
+        if (document.getElementById('logout-confirm-modal')) return;
 
-    logout() {
-        this.clearSession();
-        window.location.href = 'login.html';
-    }
+        const modal = document.createElement('div');
+        modal.id = 'logout-confirm-modal';
+        modal.className = 'logout-modal-overlay';
+
+        modal.innerHTML = `
+            <div class="logout-modal">
+                <div class="logout-modal-icon">🚪</div>
+                <h2>Confirm Sign Out</h2>
+                <p>Are you sure you want to sign out of your LedgerLine account?</p>
+                <div class="logout-modal-actions">
+                    <button type="button" id="cancel-logout"
+                        class="logout-cancel-btn">Cancel</button>
+                    <button type="button" id="confirm-logout"
+                        class="logout-confirm-btn">Confirm Sign Out</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        modal.querySelector('#cancel-logout').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        modal.querySelector('#confirm-logout').addEventListener('click', () => {
+            this.clearSession();
+            sessionStorage.setItem('ledgerline_logged_out', 'true');
+            window.location.replace('index.html');
+        });
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) modal.remove();
+        });
+    },
+    
 };
+window.Auth = Auth;
+
+// Recheck authentication whenever a page is restored from browser history
+window.addEventListener('pageshow', function () {
+    const currentPage = window.location.pathname
+        .split('/')
+        .pop()
+        .toLowerCase();
+
+    const publicPages = ['index.html', 'login.html', 'register.html'];
+
+    if (!publicPages.includes(currentPage) && !Auth.isAuthenticated()) {
+        window.location.replace('login.html');
+    }
+});
 
 /**
  * Global API Fetch Wrapper with Bearer Auth & Global Error Handling
@@ -85,7 +133,7 @@ async function apiFetch(endpoint, options = {}) {
             Auth.clearSession();
             showToast('Session expired. Please log in again.', 'error');
             setTimeout(() => {
-                window.location.href = 'login.html';
+               window.location.replace('login.html');
             }, 1200);
             throw new Error('Unauthorized');
         }
@@ -298,7 +346,7 @@ function showConfirmModal(title, message, detailsHtml, onConfirm) {
  * Login Page Handler
  */
 function initLoginPage() {
-    // If already logged in, redirect to dashboard
+
     if (Auth.isAuthenticated()) {
         window.location.href = 'dashboard.html';
         return;
@@ -307,8 +355,55 @@ function initLoginPage() {
     const form = document.getElementById('form-login');
     if (!form) return;
 
+    let selectedRole = null;
+
+    const roleButtons = document.querySelectorAll('.role-option');
+    const roleDescription = document.getElementById('role-description');
+    const identifierInput = document.getElementById('login-identifier');
+
+    const roleDetails = {
+        ROLE_ACCOUNT_HOLDER: {
+            label: 'Account Holder',
+            placeholder: 'Enter account holder username',
+            description: 'Manage accounts, balances and transactions.'
+        },
+        ROLE_ADMIN: {
+            label: 'Administrator',
+            placeholder: 'Enter administrator username',
+            description: 'Manage users and oversee banking operations.'
+        },
+        ROLE_AUDITOR: {
+            label: 'Auditor',
+            placeholder: 'Enter auditor username',
+            description: 'Review ledger entries and security audit records.'
+        }
+    };
+
+    roleButtons.forEach(button => {
+
+        button.addEventListener('click', () => {
+
+            selectedRole = button.dataset.role;
+
+            roleButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            button.classList.add('active');
+
+            const details = roleDetails[selectedRole];
+
+            identifierInput.placeholder = details.placeholder;
+            roleDescription.textContent = details.description;
+
+        });
+
+    });
+
     form.addEventListener('submit', async (e) => {
+
         e.preventDefault();
+
         const identifierInput = document.getElementById('login-identifier');
         const passwordInput = document.getElementById('login-password');
         const submitBtn = document.getElementById('btn-login-submit');
@@ -316,21 +411,40 @@ function initLoginPage() {
         const usernameOrEmail = identifierInput.value.trim();
         const password = passwordInput.value;
 
+        if (!selectedRole) {
+            showToast('Please select your login role first.', 'error');
+            return;
+        }
+
         if (!usernameOrEmail || !password) {
-            showToast('Please enter your username/email and password', 'error');
+            showToast('Please enter your username/email and password.', 'error');
             return;
         }
 
         try {
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Authenticating...';
 
             const res = await apiFetch('/auth/login', {
                 method: 'POST',
-                body: JSON.stringify({ usernameOrEmail, password })
+                body: JSON.stringify({
+                    usernameOrEmail,
+                    password
+                })
             });
 
             const data = res.data;
+
+            // Verify selected role against the actual backend role
+            if (data.role !== selectedRole) {
+                showToast(
+                    'Selected role does not match this account. Please choose the correct role.',
+                    'error'
+                );
+                return;
+            }
+
             Auth.setSession(data.token, {
                 userId: data.userId,
                 username: data.username,
@@ -339,20 +453,28 @@ function initLoginPage() {
                 role: data.role
             });
 
-            showToast(`Welcome back, ${data.fullName || data.username}!`, 'success');
+            showToast(
+                `Welcome back, ${data.fullName || data.username}!`,
+                'success'
+            );
+
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.replace('dashboard.html');
             }, 600);
 
         } catch (err) {
+
             showToast('Authentication failed: ' + err.message, 'error');
+
         } finally {
+
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign In';
+
         }
+
     });
 }
-
 /**
  * Registration Page Handler
  */
@@ -398,19 +520,11 @@ function initRegisterPage() {
                 body: JSON.stringify({ fullName, username, email, password })
             });
 
-            const data = res.data;
-            Auth.setSession(data.token, {
-                userId: data.userId,
-                username: data.username,
-                email: data.email,
-                fullName: data.fullName,
-                role: data.role
-            });
+            showToast('Account created successfully! Please sign in.', 'success');
 
-            showToast('Account registered successfully! Redirecting...', 'success');
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 800);
+                window.location.replace('login.html');
+            }, 1200);
 
         } catch (err) {
             showToast('Registration failed: ' + err.message, 'error');

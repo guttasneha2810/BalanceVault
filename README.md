@@ -197,7 +197,7 @@ cd backend
 ```
 *(On Linux/macOS, use `./mvnw spring-boot:run`)*
 
-The Spring Boot backend will start on **http://localhost:8080**.
+The Spring Boot backend will start on **http://localhost:8082**.
 Look for the console log:
 ```
 Started LedgerlineApplication in X.XXX seconds (process running for X.XXX)
@@ -223,7 +223,7 @@ python -m http.server 3000
 Open your browser and navigate to **http://localhost:3000/index.html**.
 
 ### Option C: Direct File Opening
-Double-click `frontend/index.html` or `frontend/login.html` directly in your file explorer. All API calls target `http://localhost:8080/api` with full CORS support pre-configured in Spring Security.
+Double-click `frontend/index.html` or `frontend/login.html` directly in your file explorer. All API calls target `http://localhost:8082/api` with full CORS support pre-configured in Spring Security.
 
 ---
 

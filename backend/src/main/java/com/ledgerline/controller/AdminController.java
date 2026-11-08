@@ -59,11 +59,11 @@ public class AdminController {
 
     @GetMapping("/accounts")
     public ResponseEntity<ApiResponse<List<AccountResponse>>> getAllAccounts() {
-        List<AccountResponse> accounts = accountRepository.findAll().stream()
-                .map(accountService::mapToResponse)
-                .collect(Collectors.toList());
+        List<AccountResponse> accounts = accountService.getAllAccounts();
 
-        return ResponseEntity.ok(ApiResponse.success("All accounts retrieved", accounts));
+        return ResponseEntity.ok(
+                ApiResponse.success("All accounts retrieved", accounts)
+        );
     }
 
     @PatchMapping("/accounts/{id}/status")

@@ -2,7 +2,7 @@
  * LEDGERLINE - Authentication & Session Management
  */
 
-const API_BASE = 'http://localhost:8082/api';
+const API_BASE = 'https://ledgerline-backend-5wnw.onrender.com/api';
 
 const Auth = {
     getToken() {

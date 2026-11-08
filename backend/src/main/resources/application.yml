@@ -1,20 +1,23 @@
 server:
-  port: 8082
+  port: ${PORT:8082}
 
 spring:
   application:
     name: ledgerline
+
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:ledgerline}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:ledgerline}?sslMode=VERIFY_IDENTITY&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
     hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
+      maximum-pool-size: 5
+      minimum-idle: 1
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -27,5 +30,5 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
-    expiration-ms: 86400000 # 24 Hours
+    secret: ${JWT_SECRET}
+    expiration-ms: 86400000

@@ -98,9 +98,10 @@ window.addEventListener('pageshow', function () {
     const currentPage = window.location.pathname
         .split('/')
         .pop()
-        .toLowerCase();
+        .toLowerCase()
+        .replace(/\.html$/, '');
 
-    const publicPages = ['index.html', 'login.html', 'register.html'];
+    const publicPages = ['', 'index', 'login', 'register'];
 
     if (!publicPages.includes(currentPage) && !Auth.isAuthenticated()) {
         window.location.replace('login.html');

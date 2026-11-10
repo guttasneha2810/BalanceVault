@@ -16,7 +16,7 @@
 
 Modern enterprise financial systems cannot tolerate eventual consistency or concurrency oversights. When multiple operations execute simultaneously against the same monetary account, naive implementations suffer from **race conditions, deadlocks, double spending, negative overdrafts, and phantom money creation**.
 
-**LEDGERLINE** is an enterprise-grade financial transaction engine engineered to uphold mathematical conservation laws under extreme concurrency. Built strictly with **Java 21, Spring Boot 3.3.5, Spring Security (stateless JWT), Spring Data JPA / Hibernate, MySQL 8.0, and pure Vanilla JavaScript**, LedgerLine guarantees:
+**BALANCEWALLET** is an enterprise-grade financial transaction engine engineered to uphold mathematical conservation laws under extreme concurrency. Built strictly with **Java 21, Spring Boot 3.3.5, Spring Security (stateless JWT), Spring Data JPA / Hibernate, MySQL 8.0, and pure Vanilla JavaScript**, LedgerLine guarantees:
 
 1. **Zero-Sum Double-Entry Accounting:** Every financial transfer creates balanced debit and credit entries ($\sum \text{signedAmount} = 0$). External deposits and withdrawals balance via designated system clearing accounts.
 2. **Deadlock-Free Pessimistic Row Locking:** Simultaneous mutual transfers acquire database write locks (`SELECT ... FOR UPDATE`) in strictly ascending numerical account ID order, mathematically eliminating cyclic deadlocks.

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LedgerLine | High-Integrity Financial Transaction Management</title>
+    <title>LedgerLine | High-Integrity Financial Transaction Management for Educational Banking Simulation</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
     <style>
@@ -74,15 +74,50 @@
             color: #64748b;
             line-height: 1.6;
         }
+            .educational-disclaimer {
+                background: #fff3cd;
+                color: #664d03;
+                border: 2px solid #ffca2c;
+                padding: 16px 22px;
+                margin: 15px auto;
+                max-width: 1100px;
+                border-radius: 10px;
+                text-align: center;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+            
+            .educational-disclaimer strong {
+                display: block;
+                font-size: 17px;
+                margin-bottom: 8px;
+            }
+            
+            .educational-disclaimer p {
+                margin: 5px 0;
+            }
     </style>
 </head>
 <body>
+     <div class="educational-disclaimer" role="alert">
+    <strong>⚠️ EDUCATIONAL DEMONSTRATION ONLY</strong>
+    <p>
+        LedgerLine is a student-developed banking simulation created
+        exclusively for educational and demonstration purposes.
+        It is NOT a real bank, financial institution, or banking service.
+    </p>
+    <p>
+        No real money or financial transactions are processed.
+        Do not enter real banking credentials, passwords, card details,
+        or sensitive personal or financial information.
+    </p>
+</div>
     <header style="background:#0f172a;border-bottom:1px solid rgba(255,255,255,0.08);padding:16px 32px;display:flex;justify-content:space-between;align-items:center;">
         <div style="display:flex;align-items:center;gap:12px;">
             <div class="logo-badge">LL</div>
             <div class="logo-text">
                 <h2>LEDGERLINE</h2>
-                <span>Financial Engine</span>
+                <span>Educational Banking Simulator</span>
             </div>
         </div>
         <div style="display:flex;gap:12px;">
@@ -156,13 +191,5 @@
         <p>&copy; 2026 LEDGERLINE Financial Systems. Built for Snovasys Fresher Hiring Challenge 2026.</p>
         <p style="margin-top:6px;font-size:12px;color:#475569;">Tech Stack: Java 21 LTS &bull; Spring Boot 3.3.5 &bull; Spring Security JWT &bull; MySQL 8.0 &bull; Vanilla JS</p>
     </footer>
-    <script>
-    // Keep the user on the homepage when browser Back is pressed.
-        history.pushState({ page: 'home' }, '', window.location.href);
-
-        window.addEventListener('popstate', function () {
-            history.pushState({ page: 'home' }, '', window.location.href);
-        });
-    </script>
 </body>
 </html>

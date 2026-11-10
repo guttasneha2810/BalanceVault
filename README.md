@@ -1,4 +1,4 @@
-# LEDGERLINE – High-Integrity Financial Transaction Management System
+# BalanceVault – High-Integrity Financial Transaction Management System
 
 [![Java 21](https://img.shields.io/badge/Java-21%20LTS-007396?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -16,7 +16,7 @@
 
 Modern enterprise financial systems cannot tolerate eventual consistency or concurrency oversights. When multiple operations execute simultaneously against the same monetary account, naive implementations suffer from **race conditions, deadlocks, double spending, negative overdrafts, and phantom money creation**.
 
-**BALANCEWALLET** is an enterprise-grade financial transaction engine engineered to uphold mathematical conservation laws under extreme concurrency. Built strictly with **Java 21, Spring Boot 3.3.5, Spring Security (stateless JWT), Spring Data JPA / Hibernate, MySQL 8.0, and pure Vanilla JavaScript**, LedgerLine guarantees:
+**BalanceVault** is an enterprise-grade financial transaction engine engineered to uphold mathematical conservation laws under extreme concurrency. Built strictly with **Java 21, Spring Boot 3.3.5, Spring Security (stateless JWT), Spring Data JPA / Hibernate, POSTGREQSQL, and pure Vanilla JavaScript**, BalanceVault guarantees:
 
 1. **Zero-Sum Double-Entry Accounting:** Every financial transfer creates balanced debit and credit entries ($\sum \text{signedAmount} = 0$). External deposits and withdrawals balance via designated system clearing accounts.
 2. **Deadlock-Free Pessimistic Row Locking:** Simultaneous mutual transfers acquire database write locks (`SELECT ... FOR UPDATE`) in strictly ascending numerical account ID order, mathematically eliminating cyclic deadlocks.

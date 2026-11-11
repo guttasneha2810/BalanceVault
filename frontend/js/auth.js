@@ -428,7 +428,35 @@ function initLoginPage() {
             });
 
     });
-
+    // Click demo credentials to fill login fields
+    document.querySelectorAll('.demo-credential').forEach(card => {
+    
+        card.addEventListener('click', () => {
+    
+            selectedRole = card.dataset.role;
+    
+            identifierInput.value = card.dataset.username;
+    
+            document.getElementById('login-password').value =
+                card.dataset.password;
+    
+            roleButtons.forEach(btn => {
+                btn.classList.toggle(
+                    'active',
+                    btn.dataset.role === selectedRole
+                );
+            });
+    
+            const details = roleDetails[selectedRole];
+    
+            if (details) {
+                identifierInput.placeholder = details.placeholder;
+                roleDescription.textContent = details.description;
+            }
+    
+            showToast('Demo credentials filled! Click Sign In.', 'success');
+        });
+    });
     form.addEventListener('submit', async (e) => {
 
         e.preventDefault();

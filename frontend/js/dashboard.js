@@ -92,7 +92,6 @@ async function loadAccountHolderDashboard() {
         showToast('Failed to load dashboard data: ' + err.message, 'error');
     }
 }
-
 async function loadAdminDashboard() {
     try {
         const [usersRes, accountsRes, logsRes] = await Promise.all([
@@ -105,28 +104,185 @@ async function loadAdminDashboard() {
         const accounts = accountsRes.data || [];
         const logs = logsRes.data || [];
 
+        // Load pending registrations separately so existing
+        // dashboard functionality still works if this endpoint fails.
+        let pendingUsers = [];
+
+        try {
+            const pendingRes = await apiFetch('/admin/users/pending');
+            pendingUsers = pendingRes.data || [];
+        } catch (error) {
+            console.error('Could not load pending registrations:', error);
+        }
+
         let totalLiquidity = 0;
+
         accounts.filter(a => !a.systemAccount).forEach(a => {
             totalLiquidity += parseFloat(a.balance || 0);
         });
 
-        document.getElementById('kpi-1-title').textContent = 'Total Customer Liquidity';
-        document.getElementById('kpi-1-value').textContent = `$${totalLiquidity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        document.getElementById('kpi-1-sub').textContent = 'Across all user checking & savings';
+        document.getElementById('kpi-1-title').textContent =
+            'Total Customer Liquidity';
 
-        document.getElementById('kpi-2-title').textContent = 'Registered Users';
-        document.getElementById('kpi-2-value').textContent = users.length;
-        document.getElementById('kpi-2-sub').textContent = 'System wide';
+        document.getElementById('kpi-1-value').textContent =
+            `$${totalLiquidity.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
 
-        document.getElementById('kpi-3-title').textContent = 'Security Audit Events';
-        document.getElementById('kpi-3-value').textContent = logs.length;
-        document.getElementById('kpi-3-sub').textContent = 'Total recorded events';
+        document.getElementById('kpi-1-sub').textContent =
+            'Across all user checking & savings';
 
-        // Render Admin Section in Place of Recent Transactions
-        const txSec = document.getElementById('dashboard-transactions-card');
+        document.getElementById('kpi-2-title').textContent =
+            'Registered Users';
+
+        document.getElementById('kpi-2-value').textContent =
+            users.length;
+
+        document.getElementById('kpi-2-sub').textContent =
+            `${pendingUsers.length} awaiting approval`;
+
+        document.getElementById('kpi-3-title').textContent =
+            'Security Audit Events';
+
+        document.getElementById('kpi-3-value').textContent =
+            logs.length;
+
+        document.getElementById('kpi-3-sub').textContent =
+            'Total recorded events';
+
+        // Create or reuse the pending registrations card.
+        const txSec = document.getElementById(
+            'dashboard-transactions-card'
+        );
+
+        let pendingCard = document.getElementById(
+            'pending-approvals-card'
+        );
+
+        if (txSec && !pendingCard) {
+            pendingCard = document.createElement('div');
+            pendingCard.id = 'pending-approvals-card';
+            pendingCard.className = 'card';
+            txSec.parentNode.insertBefore(pendingCard, txSec);
+        }
+
+        if (pendingCard) {
+            pendingCard.innerHTML = `
+                <div class="card-header">
+                    <h3>Pending Registrations</h3>
+                    <span class="badge ${
+                        pendingUsers.length > 0
+                            ? 'badge-warning'
+                            : 'badge-success'
+                    }">
+                        ${pendingUsers.length} Pending
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    ${
+                        pendingUsers.length === 0
+                            ? `<p style="text-align:center;padding:20px;color:#64748b;">
+                                No pending registrations.
+                               </p>`
+                            : `
+                                <div class="table-responsive">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Username</th>
+                                                <th>Email</th>
+                                                <th>Registered</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${pendingUsers.map(user => `
+                                                <tr>
+                                                    <td>${escapeApprovalHtml(user.fullName || '-')}</td>
+                                                    <td>${escapeApprovalHtml(user.username || '-')}</td>
+                                                    <td>${escapeApprovalHtml(user.email || '-')}</td>
+                                                    <td>${user.createdAt
+                                                        ? new Date(user.createdAt).toLocaleDateString()
+                                                        : '-'}</td>
+                                                    <td style="white-space:nowrap;">
+                                                        <button
+                                                            class="btn btn-primary btn-sm"
+                                                            data-approval-id="${user.id}"
+                                                            data-approval-status="APPROVED">
+                                                            Approve
+                                                        </button>
+
+                                                        <button
+                                                            class="btn btn-outline btn-sm"
+                                                            data-approval-id="${user.id}"
+                                                            data-approval-status="REJECTED"
+                                                            style="color:#dc2626;">
+                                                            Reject
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `
+                    }
+                </div>
+            `;
+
+            // Attach approval/rejection actions.
+            pendingCard.querySelectorAll('[data-approval-id]')
+                .forEach(button => {
+                    button.addEventListener('click', async () => {
+                        const userId = button.dataset.approvalId;
+                        const status = button.dataset.approvalStatus;
+
+                        const confirmed = confirm(
+                            `Are you sure you want to ${status.toLowerCase()} this registration?`
+                        );
+
+                        if (!confirmed) return;
+
+                        button.disabled = true;
+
+                        try {
+                            await apiFetch(
+                                `/admin/users/${userId}/approval`,
+                                {
+                                    method: 'PATCH',
+                                    body: JSON.stringify({ status })
+                                }
+                            );
+
+                            showToast(
+                                `User ${status.toLowerCase()} successfully.`,
+                                'success'
+                            );
+
+                            await loadAdminDashboard();
+
+                        } catch (error) {
+                            showToast(
+                                'Approval failed: ' + error.message,
+                                'error'
+                            );
+
+                            button.disabled = false;
+                        }
+                    });
+                });
+        }
+
+        // Preserve existing Admin audit events section.
         if (txSec) {
-            txSec.querySelector('.card-header h3').textContent = 'Recent Security Audit Events';
+            txSec.querySelector('.card-header h3').textContent =
+                'Recent Security Audit Events';
+
             const body = txSec.querySelector('.card-body');
+
             body.innerHTML = `
                 <div class="table-responsive">
                     <table class="data-table">
@@ -144,11 +300,19 @@ async function loadAdminDashboard() {
                             ${logs.slice(0, 6).map(l => `
                                 <tr>
                                     <td>${new Date(l.timestamp).toLocaleString()}</td>
-                                    <td><strong>${l.eventType}</strong></td>
-                                    <td>${l.username || 'Anonymous'}</td>
-                                    <td><code>${l.clientIp || '-'}</code></td>
-                                    <td><span class="badge ${l.status === 'SUCCESS' ? 'badge-success' : 'badge-danger'}">${l.status}</span></td>
-                                    <td>${l.failureReason || l.details || '-'}</td>
+                                    <td><strong>${escapeApprovalHtml(l.eventType)}</strong></td>
+                                    <td>${escapeApprovalHtml(l.username || 'Anonymous')}</td>
+                                    <td><code>${escapeApprovalHtml(l.clientIp || '-')}</code></td>
+                                    <td>
+                                        <span class="badge ${
+                                            l.status === 'SUCCESS'
+                                                ? 'badge-success'
+                                                : 'badge-danger'
+                                        }">
+                                            ${escapeApprovalHtml(l.status)}
+                                        </span>
+                                    </td>
+                                    <td>${escapeApprovalHtml(l.failureReason || l.details || '-')}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -156,11 +320,25 @@ async function loadAdminDashboard() {
                 </div>
             `;
         }
+
     } catch (err) {
-        showToast('Failed to load admin dashboard: ' + err.message, 'error');
+        showToast(
+            'Failed to load admin dashboard: ' + err.message,
+            'error'
+        );
     }
 }
 
+// Escape text before inserting user-controlled values into HTML.
+function escapeApprovalHtml(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[character]);
+}
 async function loadAuditorDashboard() {
     try {
         const [accountsRes, historyRes, logsRes] = await Promise.all([

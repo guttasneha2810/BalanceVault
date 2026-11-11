@@ -5,7 +5,6 @@ import com.ledgerline.dto.AuthResponse;
 import com.ledgerline.dto.RegisterRequest;
 import com.ledgerline.entity.Account;
 import com.ledgerline.entity.User;
-import com.ledgerline.enums.AccountStatus;
 import com.ledgerline.enums.AccountType;
 import com.ledgerline.enums.AuditEventType;
 import com.ledgerline.enums.Role;
@@ -53,14 +52,18 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request, String clientIp) {
+
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new InvalidTransactionException("Username is already taken: " + request.getUsername());
-        }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new InvalidTransactionException("Email is already registered: " + request.getEmail());
+            throw new InvalidTransactionException(
+                    "Username is already taken: " + request.getUsername());
         }
 
-        // STRICT SECURITY: Never trust role from frontend. Registration is strictly ROLE_ACCOUNT_HOLDER.
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new InvalidTransactionException(
+                    "Email is already registered: " + request.getEmail());
+        }
+
+        // All public registrations are account holders with PENDING status.
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
@@ -68,9 +71,10 @@ public class AuthService {
                 request.getFullName(),
                 Role.ROLE_ACCOUNT_HOLDER
         );
+
         User savedUser = userRepository.save(user);
 
-        // Provision default checking account for user
+        // Preserve default checking account creation.
         Account defaultAccount = new Account(
                 AccountNumberGenerator.generate(),
                 savedUser,
@@ -79,6 +83,7 @@ public class AuthService {
                 BigDecimal.ZERO,
                 "USD"
         );
+
         accountRepository.save(defaultAccount);
 
         auditLogService.logEvent(
@@ -89,17 +94,12 @@ public class AuthService {
                 null,
                 "SUCCESS",
                 null,
-                "User registered with default checking account"
+                "User registered and is waiting for admin approval"
         );
 
-        // Auto authenticate and generate token
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
-        String token = tokenProvider.generateToken(authentication);
-
+        // Do not generate a JWT until the administrator approves the account.
         return new AuthResponse(
-                token,
+                null,
                 savedUser.getId(),
                 savedUser.getUsername(),
                 savedUser.getEmail(),
@@ -110,12 +110,68 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(AuthRequest request, String clientIp) {
+
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsernameOrEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsernameOrEmail(),
+                            request.getPassword()
+                    )
             );
 
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            UserPrincipal userPrincipal =
+                    (UserPrincipal) authentication.getPrincipal();
+
+            User user = userRepository.findByUsername(userPrincipal.getUsername())
+                    .orElseThrow(() ->
+                            new IllegalArgumentException("User account not found"));
+
+            String status = user.getStatus();
+
+            // Block accounts waiting for administrator approval.
+            if ("PENDING".equalsIgnoreCase(status)) {
+                auditLogService.logEvent(
+                        AuditEventType.LOGIN_FAILURE,
+                        user.getUsername(),
+                        clientIp,
+                        null,
+                        null,
+                        "FAILURE",
+                        "Account pending approval",
+                        "Login blocked because admin approval is pending"
+                );
+
+                throw new IllegalArgumentException(
+                        "Your account is waiting for admin approval."
+                );
+            }
+
+            // Block rejected accounts.
+            if ("REJECTED".equalsIgnoreCase(status)) {
+                auditLogService.logEvent(
+                        AuditEventType.LOGIN_FAILURE,
+                        user.getUsername(),
+                        clientIp,
+                        null,
+                        null,
+                        "FAILURE",
+                        "Account rejected",
+                        "Login blocked because account was rejected"
+                );
+
+                throw new IllegalArgumentException(
+                        "Your registration has been rejected. Please contact the administrator."
+                );
+            }
+
+            // Only ACTIVE and APPROVED accounts can log in.
+            if (!"ACTIVE".equalsIgnoreCase(status)
+                    && !"APPROVED".equalsIgnoreCase(status)) {
+                throw new IllegalArgumentException(
+                        "Your account is not active. Please contact the administrator."
+                );
+            }
+
             String token = tokenProvider.generateToken(authentication);
 
             auditLogService.logEvent(
@@ -139,6 +195,7 @@ public class AuthService {
             );
 
         } catch (AuthenticationException ex) {
+
             auditLogService.logEvent(
                     AuditEventType.LOGIN_FAILURE,
                     request.getUsernameOrEmail(),
@@ -149,7 +206,10 @@ public class AuthService {
                     "Invalid credentials",
                     "Failed login attempt"
             );
-            throw new BadCredentialsException("Invalid username or password");
+
+            throw new BadCredentialsException(
+                    "Invalid username or password"
+            );
         }
     }
 }

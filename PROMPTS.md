@@ -1,4 +1,4 @@
-# LEDGERLINE – Genuine AI Interaction Records & Engineering Journal
+# BalanceVault – Genuine AI Interaction Records & Engineering Journal
 **Candidate Name:** Gutta Venkata Naga Sneha  
 **Challenge:** Snovasys Fresher Hiring Challenge 2026  
 **Project:** LEDGERLINE – High-Integrity Double-Entry Financial Transaction Management System  

@@ -55,13 +55,13 @@ public class User {
     }
 
     public User(String username, String email, String passwordHash, String fullName, Role role) {
-        this.username = username;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.fullName = fullName;
-        this.role = role;
-        this.status = "ACTIVE";
-    }
+    this.username = username;
+    this.email = email;
+    this.passwordHash = passwordHash;
+    this.fullName = fullName;
+    this.role = role;
+    this.status = role == Role.ROLE_ACCOUNT_HOLDER ? "PENDING" : "ACTIVE";
+}
 
     @PrePersist
     protected void onCreate() {

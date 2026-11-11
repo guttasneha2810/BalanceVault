@@ -59,6 +59,44 @@
                 grid-template-columns: 1fr;
             }
         }
+        .demo-credentials {
+            margin-top: 18px;
+            padding: 14px;
+            background: #f8fafc;
+            border: 1px solid #dbe3ef;
+            border-radius: 10px;
+        }
+        
+        .demo-credentials h4 {
+            margin: 0 0 12px;
+            text-align: center;
+            color: #334155;
+            font-size: 14px;
+        }
+        
+        .demo-account {
+            padding: 9px 10px;
+            margin-top: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            font-size: 12px;
+            color: #475569;
+        }
+        
+        .demo-account strong {
+            color: #4f46e5;
+            font-size: 13px;
+        }
+        
+        .demo-account p {
+            margin: 5px 0 0;
+        }
+        
+        .demo-account code {
+            color: #1e293b;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -138,14 +176,28 @@
                 Sign In
             </button>
 
-           <p class="evaluator-note">
-                Want to explore BalanceVault? Use the demo credentials in our
-                <a href="https://github.com/guttasneha2810/BalanceVault#demo-credentials"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    README
-                </a>
-            </p>
+           <div class="demo-credentials">
+                <h4>🔑 Demo Login Credentials</h4>
+            
+            <div class="demo-account">
+                <strong>👤 Account Holder</strong>
+                <p>Username: <code>john_doe</code></p>
+                <p>Password: <code>User@12345</code></p>
+            </div>
+            
+            <div class="demo-account">
+                <strong>🛡️ Admin</strong>
+                <p>Username: <code>admin</code></p>
+                <p>Password: <code>Admin@12345</code></p>
+            </div>
+            
+            <div class="demo-account">
+                <strong>🔍 Auditor</strong>
+                <p>Username: <code>auditor_jane</code></p>
+                <p>Password: <code>Auditor@12345</code></p>
+            </div>
+            
+            </div>
 
         </form>
 

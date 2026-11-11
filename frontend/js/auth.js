@@ -221,9 +221,6 @@ function renderSidebar(activePage) {
             <a href="transfer.html" class="nav-item ${activePage === 'transfer' ? 'active' : ''}">
                 <span class="icon">🔄</span> Transfer Money
             </a>
-            <a href="notifications.html" class="nav-item ${activePage === 'notifications' ? 'active' : ''}">
-                <span class="icon">🔔</span> Notifications
-            </a>
             <div class="nav-section-title">Reports & History</div>
             <a href="transactions.html" class="nav-item ${activePage === 'transactions' ? 'active' : ''}">
                 <span class="icon">📜</span> Transactions

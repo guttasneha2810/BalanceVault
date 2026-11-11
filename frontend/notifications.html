@@ -46,10 +46,13 @@
     <script src="js/auth.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            Auth.requireAuth();
-            renderSidebar('notifications');
-        });
+       document.addEventListener('DOMContentLoaded', () => {
+
+    if (Auth.requireAuth()) {
+        renderSidebar('notifications');
+    }
+
+});
     </script>
 
 </body>

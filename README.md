@@ -2,7 +2,7 @@
 
 [![Java 21](https://img.shields.io/badge/Java-21%20LTS-007396?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Tests](https://img.shields.io/badge/Tests-15%20Passed%20(100%25)-success)](backend/src/test/)
 [![Security](https://img.shields.io/badge/Security-STRIDE%20Verified-blueviolet)](THREATS.md)
 
@@ -16,12 +16,12 @@
 
 Modern enterprise financial systems cannot tolerate eventual consistency or concurrency oversights. When multiple operations execute simultaneously against the same monetary account, naive implementations suffer from **race conditions, deadlocks, double spending, negative overdrafts, and phantom money creation**.
 
-**BalanceVault** is an enterprise-grade financial transaction engine engineered to uphold mathematical conservation laws under extreme concurrency. Built strictly with **Java 21, Spring Boot 3.3.5, Spring Security (stateless JWT), Spring Data JPA / Hibernate, POSTGREQSQL, and pure Vanilla JavaScript**, BalanceVault guarantees:
+**BalanceVault** is an enterprise-grade financial transaction engine engineered to uphold mathematical conservation laws under extreme concurrency. Built strictly with **Java 21, Spring Boot 3.3.5, Spring Security (stateless JWT), Spring Data JPA / Hibernate, PostgreSQL, and pure Vanilla JavaScript**, BalanceVault guarantees:
 
 1. **Zero-Sum Double-Entry Accounting:** Every financial transfer creates balanced debit and credit entries ($\sum \text{signedAmount} = 0$). External deposits and withdrawals balance via designated system clearing accounts.
 2. **Deadlock-Free Pessimistic Row Locking:** Simultaneous mutual transfers acquire database write locks (`SELECT ... FOR UPDATE`) in strictly ascending numerical account ID order, mathematically eliminating cyclic deadlocks.
 3. **Cryptographic Idempotency Engine:** HTTP requests carrying an `Idempotency-Key` are fingerprinted with SHA-256 hashes. Safe identical retries receive the cached original response without re-executing balance mutations; tampered payloads on reused keys are rejected with `HTTP 409 Conflict`.
-4. **Absolute Balance Integrity:** All monetary operations utilize `java.math.BigDecimal` and MySQL `DECIMAL(19, 4)` with database-level `CHECK (balance >= 0.0000)` constraints to eliminate overdrafts and floating-point rounding errors.
+4. **Absolute Balance Integrity:** All monetary operations utilize `java.math.BigDecimal` and PostgreSQL `DECIMAL(19, 4)` with database-level `CHECK (balance >= 0.0000)` constraints to eliminate overdrafts and floating-point rounding errors.
 5. **Strict Three-Tier Role-Based Security:** Server-enforced authorization across `ADMIN`, `ACCOUNT_HOLDER`, and read-only `AUDITOR` roles with privilege escalation prevention.
 6. **Autonomous Audit Trail:** Isolated audit logging (`REQUIRES_NEW`) records both successful transactions and refused attempts with forensic context.
 
@@ -78,7 +78,7 @@ Modern enterprise financial systems cannot tolerate eventual consistency or conc
                                          |
                                          v
 +-----------------------------------------------------------------------------------+
-|                         PERSISTENCE TIER (MySQL 8.0 InnoDB)                       |
+|                         PERSISTENCE TIER (PostgreSQL 16)                          |
 |  - accounts (DECIMAL(19,4), CHECK(balance >= 0), pessimistic row lock targets)    |
 |  - transactions & ledger_entries (Immutable write-once financial journal)         |
 |  - idempotency_keys (UNIQUE KEY on idempotency_key, SHA-256 hash storage)         |
@@ -96,7 +96,7 @@ Modern enterprise financial systems cannot tolerate eventual consistency or conc
 | **Framework** | Spring Boot 3.3.5 | Production-grade containerization, robust dependency injection, Actuator metrics. |
 | **Security** | Spring Security + JJWT 0.12.6 | Stateless JWT authentication, BCrypt password hashing, method-level `@PreAuthorize`. |
 | **Data Access** | Spring Data JPA / Hibernate | Object-relational mapping, custom native queries with `LockModeType.PESSIMISTIC_WRITE`. |
-| **Database** | MySQL 8.0+ (InnoDB) | ACID compliance, row-level locking, foreign key constraints, strict check constraints. |
+| **Database** | PostgreSQL 16+ | ACID compliance, row-level locking, foreign key constraints, strict check constraints. |
 | **Testing** | JUnit 5 + Mockito + TestRestTemplate | Multi-threaded concurrency testing (`CountDownLatch`, `ExecutorService`). |
 | **Frontend** | HTML5, CSS3, Vanilla JavaScript | Native Fetch API, zero third-party framework overhead, responsive banking layout. |
 | **Build Tool** | Apache Maven Wrapper (`mvnw`) | Self-contained, reproducible builds independent of host Maven installation. |
@@ -128,42 +128,36 @@ The database seed script (`database/seed.sql`) provisions the following authenti
 
 ## 5. Step-by-Step Database Setup
 
-### Step 5.1: Verify MySQL Installation
-Ensure MySQL 8.0+ is installed and running on `localhost:3306`.
+### Step 5.1: Verify PostgreSQL Installation
+Ensure PostgreSQL is installed and running on `localhost:5432`.
 ```powershell
-# Verify MySQL Service status (Windows)
-Get-Service MySQL*
+# Verify PostgreSQL Service status (Windows)
+Get-Service PostgreSQL*
 ```
 
 ### Step 5.2: Create Database & Execute Schema
-Open your terminal (or MySQL Workbench / CLI) and run:
+Open your terminal (or PostgreSQL Workbench / CLI) and run:
 ```bash
-# Connect to MySQL as root or administrative user
-mysql -u root -p
+# Connect to PostgreSQL as root or administrative user
+psql -h localhost -U postgres
 ```
 
 Execute the database creation and schema script:
 ```sql
-CREATE DATABASE IF NOT EXISTS ledgerline CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE ledgerline;
+CREATE DATABASE ledgerline;
+psql -h localhost -U postgres -d ledgerline
 
--- Import Schema
-SOURCE database/schema.sql;
-
--- Import Seed Data
-SOURCE database/seed.sql;
 ```
 
 *Alternatively, from the command line in the project root:*
 ```powershell
-mysql -u root -p ledgerline < database/schema.sql
-mysql -u root -p ledgerline < database/seed.sql
+psql -h localhost -U postgres -d ledgerline -f database/schema.sql
+psql -h localhost -U postgres -d ledgerline -f database/seed.sql
 ```
 
 ### Step 5.3: Verify Schema & Records
 ```sql
-USE ledgerline;
-SHOW TABLES;
+\dt
 -- Expected output: accounts, audit_logs, idempotency_keys, ledger_entries, transactions, users
 
 SELECT account_number, account_name, balance, status FROM accounts;
@@ -174,18 +168,19 @@ SELECT account_number, account_name, balance, status FROM accounts;
 ## 6. Step-by-Step Backend Execution
 
 ### Step 6.1: Configure Database Credentials
-Inspect `backend/src/main/resources/application.yml`. If your MySQL root password is not blank or `root`, update it or set the environment variables:
+Inspect `backend/src/main/resources/application.yml`. If your PostgreSQL root password is not blank or `root`, update it or set the environment variables:
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/ledgerline?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: ${DB_USERNAME:root}
+    url: jdbc:postgresql://localhost:5432/ledgerline
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:root}
+    driver-class-name: org.postgresql.Driver
 ```
 
 Or provide them via shell environment:
 ```powershell
-$env:DB_USERNAME = "root"
+$env:DB_USERNAME = "postgres"
 $env:DB_PASSWORD = "YourPasswordHere"
 ```
 
@@ -344,7 +339,7 @@ Use the following outline and script for the 5-minute video demonstration submis
 When transitioning LedgerLine to production environments:
 1. **TLS / HTTPS Termination:** Configure an SSL certificate or reverse proxy (Nginx / AWS ALB) terminating TLS 1.3 on port 443.
 2. **JWT Secret Rotation:** Replace the default HMAC-SHA256 secret key in `application.yml` with a cryptographically random 512-bit key injected via environment variable `JWT_SECRET`.
-3. **Database Privileges:** Restrict the application database user to `SELECT`, `INSERT`, `UPDATE` permissions on business tables. Deny `DELETE` and `DROP` privileges to guarantee ledger append-only immutability at the MySQL user level.
+3. **Database Privileges:** Restrict the application database user to `SELECT`, `INSERT`, `UPDATE` permissions on business tables. Deny `DELETE` and `DROP` privileges to guarantee ledger append-only immutability at the PostgreSQL user level.
 4. **HikariCP Sizing:** Set `maximum-pool-size` according to the formula:
    $$\text{Pool Size} = (\text{Core CPU Count} \times 2) + \text{Effective Spindle Count}$$
 5. **CORS Whitelisting:** Replace `allowedOrigins("*")` in `SecurityConfig.java` with the explicit production domain (e.g., `https://banking.ledgerline.com`).

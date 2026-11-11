@@ -384,23 +384,48 @@ function initLoginPage() {
     };
 
     roleButtons.forEach(button => {
-
-        button.addEventListener('click', () => {
-
-            selectedRole = button.dataset.role;
-
-            roleButtons.forEach(btn => {
-                btn.classList.remove('active');
+            button.addEventListener('click', () => {
+        
+                selectedRole = button.dataset.role;
+        
+                roleButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+        
+                button.classList.add('active');
+        
+                const details = roleDetails[selectedRole];
+        
+                identifierInput.placeholder = details.placeholder;
+                roleDescription.textContent = details.description;
+        
+                // Fill demo credentials automatically
+                const demoCredentials = {
+                    ROLE_ACCOUNT_HOLDER: {
+                        username: 'john_doe',
+                        password: 'User@12345'
+                    },
+                    ROLE_ADMIN: {
+                        username: 'admin',
+                        password: 'Admin@12345'
+                    },
+                    ROLE_AUDITOR: {
+                        username: 'auditor_jane',
+                        password: 'Auditor@12345'
+                    }
+                };
+        
+                const credentials = demoCredentials[selectedRole];
+        
+                if (credentials) {
+                    identifierInput.value = credentials.username;
+                    document.getElementById('login-password').value =
+                        credentials.password;
+        
+                    roleDescription.textContent =
+                        details.description + ' Demo credentials filled!';
+                }
             });
-
-            button.classList.add('active');
-
-            const details = roleDetails[selectedRole];
-
-            identifierInput.placeholder = details.placeholder;
-            roleDescription.textContent = details.description;
-
-        });
 
     });
 

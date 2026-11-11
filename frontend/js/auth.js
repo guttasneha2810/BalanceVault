@@ -521,11 +521,14 @@ function initRegisterPage() {
                 body: JSON.stringify({ fullName, username, email, password })
             });
 
-            showToast('Account created successfully! Please sign in.', 'success');
+            showToast(
+                'Registration successful! Your account is waiting for admin approval.',
+                'success'
+            );
 
             setTimeout(() => {
                 window.location.replace('login.html');
-            }, 1200);
+            }, 2500);
 
         } catch (err) {
             showToast('Registration failed: ' + err.message, 'error');
